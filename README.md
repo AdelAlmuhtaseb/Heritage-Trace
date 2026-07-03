@@ -81,6 +81,7 @@ curl -X POST http://127.0.0.1:5000/api/auth/register \
   -d '{"email":"you@example.com","password":"pass123","role":"volunteer"}'
 
 or for CMD:
+
 Invoke-RestMethod -Uri "http://127.0.0.1:5000/api/auth/register" -Method Post -ContentType "application/json" -Body '{"email":"you@example.com","password":"pass123","role":"volunteer"}'
 ```
 
