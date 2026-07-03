@@ -79,6 +79,9 @@ Try it with curl:
 curl -X POST http://127.0.0.1:5000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"you@example.com","password":"pass123","role":"volunteer"}'
+
+or for CMD:
+Invoke-RestMethod -Uri "http://127.0.0.1:5000/api/auth/register" -Method Post -ContentType "application/json" -Body '{"email":"you@example.com","password":"pass123","role":"volunteer"}'
 ```
 
 ---
