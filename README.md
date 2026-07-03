@@ -61,6 +61,7 @@ status (`pending` | `verified` | `rejected`), preservation_status
 cd backend
 python3 -m venv venv
 source venv/bin/activate        # on Windows: venv\Scripts\activate
+venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 cp .env.example .env            # edit if needed, defaults work for local dev
 python run.py                   # runs on http://127.0.0.1:5000
