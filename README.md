@@ -148,12 +148,3 @@ to `main`/`develop`. Once the dashboard exists, uncomment the
 
 ---
 
-## Why this project (for your CV / interviews)
-
-This project deliberately covers gaps your existing CV doesn't show:
-**React** (dashboard), **mobile** (React Native), **AI/ML** (image tagging
-model), **cloud deployment** (AWS), and **CI/CD** (GitHub Actions) — on top
-of the backend/API/database work you already have real experience in from
-FutureSys and the Bulgaria internship. It also connects to your existing
-Erasmus+/UNESCO Chair network from the "Dig in History" project, which is
-worth pursuing if you want a real pilot user rather than just a demo.
