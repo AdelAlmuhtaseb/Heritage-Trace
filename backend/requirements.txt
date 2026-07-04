@@ -8,3 +8,4 @@ gunicorn==22.0.0
 torch
 torchvision
 pillow
+psycopg2-binary
