@@ -1,46 +1,50 @@
 # Heritage Trace
 
 A crowdsourced platform for documenting and preserving at-risk or undocumented
-heritage artifacts and sites. Volunteers photograph items via a mobile app;
-an AI model auto-suggests tags (category, era, material); researchers verify
+heritage artifacts and sites. Volunteers photograph items via a mobile app; a
+self-trained AI model auto-suggests tags (category); researchers verify
 submissions and track preservation status via a web dashboard.
 
-## Status
+**Live demo:**
+- Dashboard: https://YOUR-NETLIFY-URL.netlify.app
+- Backend API: https://heritage-trace-2.onrender.com/api/health
 
-- [x] **Phase 1 — Backend API** (this repo, working & tested)
-- [x] **Phase 2 — React researcher dashboard**
-- [x] **Phase 3 — Real AI tagging model** (currently a stub, see below)
-- [x] **Phase 4 — React Native mobile app**
-- [x] **Phase 5 — Cloud deployment (AWS free tier)**
+> Note: the backend is on a free-tier host and spins down when idle — the
+> first request after inactivity may take ~30-60 seconds to respond.
+
+## What it does
+
+- Volunteers capture a photo of an artifact on their phone, tag its GPS
+  location, and submit it
+- A PyTorch image classification model (fine-tuned via transfer learning on
+  MobileNetV3-Small) automatically suggests a category — pottery, coin,
+  sculpture, tool, or jewelry — with 85-95% validation accuracy across
+  categories
+- Researchers review submissions on a web dashboard, confirm or correct the
+  AI's tags, and mark preservation status
+- Demoed to a contact from the UNESCO Chair on Digitalization of Cultural
+  Heritage, with discussions underway for a pilot deployment in Germany or
+  Estonia
 
 ## Architecture
 
-```
 heritage-trace/
-├── backend/          # Flask REST API (done)
+├── backend/          # Flask REST API — deployed on Render
 │   ├── app/
-│   │   ├── models/   # SQLAlchemy models: User, Submission, Verification
-│   │   ├── routes/   # auth, submissions, verifications blueprints
-│   │   └── ml/        # tagger.py — swap stub for real model in Phase 3
-│   ├── tests/         # pytest suite, 7 passing tests
-│   └── run.py
-├── dashboard/        # React app (Phase 2 — not yet scaffolded)
-├── mobile/           # React Native app (Phase 4 — not yet scaffolded)
-├── ml/                # Model training scripts (Phase 3 — not yet started)
+│   │   ├── models/    # SQLAlchemy models: User, Submission, Verification
+│   │   ├── routes/    # auth, submissions, verifications blueprints
+│   │   └── ml/         # inference.py — the real trained model
+│   └── tests/          # pytest suite
+├── dashboard/         # React (Vite) researcher dashboard — deployed on Netlify
+├── mobile/            # React Native (Expo) volunteer app
+├── ml/                 # Model training script + dataset
 └── .github/workflows/ci.yml   # runs backend tests on every push
-```
 
-## Data model
+## Tech stack
 
-**User** — id, email, password_hash, role (`volunteer` | `researcher` | `admin`)
-
-**Submission** — id, user_id, photo_url, latitude, longitude, notes,
-ai_category/ai_era/ai_material/ai_confidence (from the AI tagger),
-category/era/material (researcher-editable, defaults to AI values),
-status (`pending` | `verified` | `rejected`), preservation_status
-(`good` | `at_risk` | `critical`)
-
-**Verification** — id, submission_id, researcher_id, decision, comment
+Python, Flask, PostgreSQL, SQLAlchemy, JWT auth, React, React Native (Expo),
+PyTorch (transfer learning on MobileNetV3-Small), Render, Netlify, GitHub
+Actions CI/CD
 
 ## API endpoints
 
@@ -55,101 +59,85 @@ status (`pending` | `verified` | `rejected`), preservation_status
 | POST | `/api/verifications/<id>` | JWT, researcher role | Approve/reject a submission |
 | GET | `/api/verifications/<id>` | JWT | List verification history for a submission |
 
-## Running the backend locally
+---
+
+## Running it locally
+
+You'll need three terminals open at once — backend, dashboard, and (optionally) mobile.
+
+### 1. Backend
 
 ```bash
 cd backend
-python3 -m venv venv
-source venv/bin/activate        # on Windows: venv\Scripts\activate
-venv\Scripts\Activate.ps1
+python -m venv venv
+venv\Scripts\Activate.ps1        # Windows PowerShell
+# source venv/bin/activate       # macOS/Linux
+
 pip install -r requirements.txt
-cp .env.example .env            # edit if needed, defaults work for local dev
-python run.py                   # runs on http://127.0.0.1:5000
+copy .env.example .env            # Windows: copy · macOS/Linux: cp
+
+python run.py
 ```
 
-Run the tests:
+Runs on `http://127.0.0.1:5000`. Confirm it's alive:
+```bash
+curl http://127.0.0.1:5000/api/health
+```
 
+Run the test suite:
 ```bash
 python -m pytest tests/ -v
 ```
 
-Try it with curl:
+### 2. Dashboard
+
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+Runs on `http://localhost:5173`. Log in with a researcher account (register
+one first via the API if you don't have one — see below).
+
+### 3. Mobile app (optional — needs a phone with Expo Go installed)
+
+```bash
+cd mobile
+npm install
+npx expo start
+```
+
+Scan the QR code with the Expo Go app. **Before running**, update the
+`API_BASE` constant in `app/(tabs)/index.tsx` to your computer's LAN IP
+(find it via `ipconfig` / `ifconfig`) so your phone can reach the backend —
+`127.0.0.1` only works for the same device.
+
+### Creating a test account
 
 ```bash
 curl -X POST http://127.0.0.1:5000/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"you@example.com","password":"pass123","role":"volunteer"}'
-
-or for CMD:
-
-Invoke-RestMethod -Uri "http://127.0.0.1:5000/api/auth/register" -Method Post -ContentType "application/json" -Body '{"email":"you@example.com","password":"pass123","role":"volunteer"}'
+  -d '{"email":"you@example.com","password":"pass123","role":"researcher"}'
 ```
+
+Use `"role":"volunteer"` for a mobile app account, `"role":"researcher"` for
+the dashboard.
 
 ---
 
-## Next steps — what YOU do from here
+## Model details & limitations
 
-### Phase 2: React dashboard (do this next)
+The AI tagger (`backend/app/ml/inference.py`) is a MobileNetV3-Small backbone
+pretrained on ImageNet, with only the final classification layer fine-tuned
+on a small dataset (~120 images across 5 categories, sourced from Wikimedia
+Commons). It correctly classifies objects within its trained categories at
+85-95% validation accuracy, but — as expected for a small dataset — it also
+confidently misclassifies out-of-distribution objects (e.g. a household item
+gets mapped to whichever trained category looks closest). It currently
+predicts category only; era and material are placeholder values, since that
+would require separate labeled data per attribute.
 
-```bash
-cd heritage-trace
-npx create-react-app dashboard
-# or, if you'd rather use Vite (faster, more modern — recommended):
-npm create vite@latest dashboard -- --template react
-cd dashboard
-npm install axios react-router-dom
-```
-
-Build these pages first, in this order:
-1. **Login page** — POST to `/api/auth/login`, store JWT in React state (not
-   localStorage — keep it simple with Context/state for v1)
-2. **Submissions list** — GET `/api/submissions`, table with photo thumbnail,
-   AI-suggested tags, status badge
-3. **Submission detail** — GET `/api/submissions/<id>`, editable tag fields
-   (PATCH), verify/reject buttons (POST `/api/verifications/<id>`)
-
-### Phase 3: Real AI tagging model
-
-Right now `backend/app/ml/tagger.py` returns random stub tags so the rest of
-the system works end-to-end. To make it real:
-
-1. Collect ~15-20 labeled photos per category (pottery, coin, sculpture, etc.)
-   — even phone photos of museum pieces or reference images work for a v1
-2. Fine-tune a small pretrained model (MobileNetV3 or ResNet18 via PyTorch/
-   TensorFlow) on your labeled set — this is a well-documented, tractable
-   task, not a research project
-3. Save the trained model, load it in `tagger.py`, replace the random stub
-   with real `model.predict(photo)` calls
-4. Keep the function signature (`suggest_tags(photo_url) -> dict`) identical
-   so nothing else in the codebase changes
-
-### Phase 4: React Native mobile app
-
-```bash
-npx create-expo-app mobile
-cd mobile
-npx expo install expo-camera expo-location
-```
-
-Core screens: camera capture → confirm GPS → optional notes → POST to
-`/api/submissions`. Use Expo so you can test on your own phone instantly
-without dealing with Apple/Google developer accounts yet.
-
-### Phase 5: Cloud deployment
-
-- Photo storage: S3 bucket (swap `photo_url` handling to actually upload to
-  S3 instead of accepting arbitrary URLs)
-- Backend: Elastic Beanstalk or a plain EC2 instance running gunicorn
-  (`gunicorn run:app` — already in requirements.txt)
-- Database: switch `DATABASE_URL` to an RDS Postgres instance
-- **Set a billing alert immediately** when you create the AWS account — see
-  earlier note, stay inside free tier limits
-
-### CI/CD
-
-`.github/workflows/ci.yml` already runs the backend test suite on every push
-to `main`/`develop`. Once the dashboard exists, uncomment the
-`dashboard-tests` job and add a `npm test` script.
-
----
-
+**Natural next steps:** collect more/varied training images, add an
+"unknown" rejection threshold for low-confidence predictions, and extend to
+multi-attribute classification (era, material) with additional labeled data.
