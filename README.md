@@ -24,7 +24,7 @@ submissions and track preservation status via a web dashboard.
   AI's tags, and mark preservation status
 
 ## Architecture
-
+```
 heritage-trace/
 ├── backend/          # Flask REST API — deployed on Render
 │   ├── app/
@@ -36,6 +36,7 @@ heritage-trace/
 ├── mobile/            # React Native (Expo) volunteer app
 ├── ml/                 # Model training script + dataset
 └── .github/workflows/ci.yml   # runs backend tests on every push
+```
 
 ## Tech stack
 
