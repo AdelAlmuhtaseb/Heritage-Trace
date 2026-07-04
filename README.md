@@ -22,9 +22,6 @@ submissions and track preservation status via a web dashboard.
   categories
 - Researchers review submissions on a web dashboard, confirm or correct the
   AI's tags, and mark preservation status
-- Demoed to a contact from the UNESCO Chair on Digitalization of Cultural
-  Heritage, with discussions underway for a pilot deployment in Germany or
-  Estonia
 
 ## Architecture
 
