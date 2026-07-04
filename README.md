@@ -11,7 +11,7 @@ submissions and track preservation status via a web dashboard.
 - [x] **Phase 2 — React researcher dashboard**
 - [x] **Phase 3 — Real AI tagging model** (currently a stub, see below)
 - [x] **Phase 4 — React Native mobile app**
-- [ ] **Phase 5 — Cloud deployment (AWS free tier)**
+- [x] **Phase 5 — Cloud deployment (AWS free tier)**
 
 ## Architecture
 
