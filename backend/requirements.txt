@@ -5,7 +5,10 @@ Flask-Cors==4.0.1
 python-dotenv==1.0.1
 pytest==8.2.0
 gunicorn==22.0.0
+<<<<<<< HEAD
 torch
 torchvision
 pillow
 psycopg2-binary
+=======
+>>>>>>> origin/main

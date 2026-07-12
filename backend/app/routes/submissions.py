@@ -2,7 +2,11 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models.models import Submission
+<<<<<<< HEAD
 from app.ml.inference import suggest_tags
+=======
+from app.ml.tagger import suggest_tags
+>>>>>>> origin/main
 
 submissions_bp = Blueprint("submissions", __name__)
 
